@@ -67,6 +67,12 @@ export default class App extends React.Component {
     }));
   };
 
+  beginStartFunction = () => {
+    return new Promise((resolve) => {
+      resolve(console.log("Begin drag"));
+    })
+  };
+
   render() {
     const {
       treeData,
@@ -113,7 +119,7 @@ export default class App extends React.Component {
                 path
               )
             }
-            beginDragFunc={() => {console.log('BEGIN DRAG')}}
+            beginDragFunc={this.beginStartFunction}
             maxDepth={maxDepth}
             searchQuery={searchString}
             searchFocusOffset={searchFocusIndex}
