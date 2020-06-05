@@ -169,8 +169,9 @@ export default class DndManager {
 
         beginDragFunc(node).then(() => {
           this.startDrag(props);
-          return node;
         });
+
+        return node;
       },
 
       endDrag: (props, monitor) => {

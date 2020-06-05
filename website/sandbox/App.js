@@ -1,5 +1,6 @@
 import React from 'react';
 import SortableTree, { toggleExpandedForAll } from '../../src';
+import { reverse } from 'lodash';
 
 import treeData from './treeData';
 
@@ -69,7 +70,13 @@ export default class App extends React.Component {
 
   beginStartFunction = () => {
     return new Promise((resolve) => {
-      resolve();
+      const { treeData } = this.state;
+      let data = [...treeData];
+      data = reverse(data);
+      console.log(data);
+      this.setState({ treeData: data }, () => {
+        resolve();
+      });
     })
   };
 
@@ -109,16 +116,7 @@ export default class App extends React.Component {
           <SortableTree
             treeData={treeData}
             onChange={this.handleTreeOnChange}
-            onMoveNode={({ node, treeIndex, path }) =>
-              global.console.debug(
-                'node:',
-                node,
-                'treeIndex:',
-                treeIndex,
-                'path:',
-                path
-              )
-            }
+            onMoveNode={() => {}}
             beginDragFunc={this.beginStartFunction}
             maxDepth={maxDepth}
             searchQuery={searchString}
