@@ -159,21 +159,23 @@ export default class DndManager {
   wrapSource(el, beginDragFunc) {
     const nodeDragSource = {
       beginDrag: props => {
-        if (beginDragFunc) {
-          beginDragFunc().then(() => {
-            this.startDrag(props);
-          })
-        } else {
-          this.startDrag(props);
-        }
-
-        return {
+        const node = {
           node: props.node,
           parentNode: props.parentNode,
           path: props.path,
           treeIndex: props.treeIndex,
           treeId: props.treeId,
         };
+
+        if (beginDragFunc) {
+          beginDragFunc(node).then(() => {
+            this.startDrag(props);
+          })
+        } else {
+          this.startDrag(props);
+        }
+
+        return node;
       },
 
       endDrag: (props, monitor) => {
