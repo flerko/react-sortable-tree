@@ -156,10 +156,12 @@ export default class DndManager {
     return true;
   }
 
-  wrapSource(el) {
+  wrapSource(el, beginDragFunc) {
     const nodeDragSource = {
       beginDrag: props => {
         this.startDrag(props);
+        // eslint-disable-next-line no-unused-expressions
+        beginDragFunc && beginDragFunc();
 
         return {
           node: props.node,

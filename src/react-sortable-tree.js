@@ -83,6 +83,7 @@ class ReactSortableTree extends Component {
       treeNodeRenderer,
       isVirtualized,
       slideRegionSize,
+      beginDragFunc,
     } = mergeTheme(props);
 
     this.dndManager = new DndManager(this);
@@ -91,7 +92,7 @@ class ReactSortableTree extends Component {
     this.treeId = `rst__${treeIdCounter}`;
     treeIdCounter += 1;
     this.dndType = dndType || this.treeId;
-    this.nodeContentRenderer = this.dndManager.wrapSource(nodeContentRenderer);
+    this.nodeContentRenderer = this.dndManager.wrapSource(nodeContentRenderer, beginDragFunc);
     this.treePlaceholderRenderer = this.dndManager.wrapPlaceholder(
       TreePlaceholder
     );
