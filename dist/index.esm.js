@@ -2339,21 +2339,23 @@ var DndManager = /*#__PURE__*/function () {
 
       var nodeDragSource = {
         beginDrag: function beginDrag(props) {
-          if (beginDragFunc) {
-            beginDragFunc().then(function () {
-              _this.startDrag(props);
-            });
-          } else {
-            _this.startDrag(props);
-          }
-
-          return {
+          var node = {
             node: props.node,
             parentNode: props.parentNode,
             path: props.path,
             treeIndex: props.treeIndex,
             treeId: props.treeId
           };
+
+          if (beginDragFunc) {
+            beginDragFunc(node).then(function () {
+              _this.startDrag(props);
+            });
+          } else {
+            _this.startDrag(props);
+          }
+
+          return node;
         },
         endDrag: function endDrag(props, monitor) {
           _this.endDrag(monitor.getDropResult());

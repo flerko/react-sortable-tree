@@ -69,7 +69,7 @@ export default class App extends React.Component {
 
   beginStartFunction = () => {
     return new Promise((resolve) => {
-      resolve(console.log("Begin drag"));
+      resolve();
     })
   };
 
