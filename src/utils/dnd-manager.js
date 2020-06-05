@@ -167,15 +167,10 @@ export default class DndManager {
           treeId: props.treeId,
         };
 
-        if (beginDragFunc) {
-          beginDragFunc(node).then(() => {
-            this.startDrag(props);
-          })
-        } else {
+        beginDragFunc(node).then(() => {
           this.startDrag(props);
-        }
-
-        return node;
+          return node;
+        });
       },
 
       endDrag: (props, monitor) => {
