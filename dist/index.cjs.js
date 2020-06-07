@@ -2356,9 +2356,8 @@ var DndManager = /*#__PURE__*/function () {
           };
           beginDragFunc(node).then(function () {
             _this.startDrag(props);
-
-            return node;
           });
+          return node;
         },
         endDrag: function endDrag(props, monitor) {
           _this.endDrag(monitor.getDropResult());
