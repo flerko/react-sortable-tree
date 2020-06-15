@@ -623,9 +623,10 @@ export function addNodeUnderIndexParent({
 }) {
   if (parentKey === null) {
     const data = [...(treeData || [])];
+    data.splice(index, 0, newNode);
 
     return {
-      treeData: data.splice(index, 0, newNode),
+      treeData: data,
       treeIndex: (treeData || []).length,
     }
   }
@@ -674,10 +675,9 @@ export function addNodeUnderIndexParent({
 
       insertedTreeIndex = nextTreeIndex;
 
-      const newChildren = [...parentNode.children];
+      const children = [...parentNode.children];
 
-      // const children = [...parentNode.children, newNode];
-      const children = newChildren.splice(index, 0, newNode);
+      children.splice(index, 0, newNode);
 
       return {
         ...parentNode,

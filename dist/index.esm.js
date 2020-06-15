@@ -1295,8 +1295,9 @@ function addNodeUnderIndexParent(_ref19) {
   if (parentKey === null) {
     var data = _toConsumableArray(treeData || []);
 
+    data.splice(index, 0, newNode);
     return {
-      treeData: data.splice(index, 0, newNode),
+      treeData: data,
       treeIndex: (treeData || []).length
     };
   }
@@ -1348,10 +1349,9 @@ function addNodeUnderIndexParent(_ref19) {
 
       insertedTreeIndex = nextTreeIndex;
 
-      var newChildren = _toConsumableArray(parentNode.children); // const children = [...parentNode.children, newNode];
+      var children = _toConsumableArray(parentNode.children);
 
-
-      var children = newChildren.splice(index, 0, newNode);
+      children.splice(index, 0, newNode);
       return _objectSpread2(_objectSpread2({}, parentNode), {}, {
         children: children
       });
