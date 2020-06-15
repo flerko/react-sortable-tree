@@ -1280,13 +1280,14 @@ function getNodeAtPath(_ref17) {
  * @param {boolean=} ignoreCollapsed - Ignore children of nodes without `expanded` set to `true`
  * @param {boolean=} expandParent - If true, expands the parentNode specified by parentPath
  * @param {boolean=} addAsFirstChild - If true, adds new node as first child of tree
+ * @param {number=} index - Index, after add node
  *
  * @return {Object} result
  * @return {Object[]} result.treeData - The updated tree data
  * @return {number} result.treeIndex - The tree index at which the node was inserted
  */
 
-function addNodeUnderParent(_ref19) {
+function addNodeUnderIndexParent(_ref19) {
   var treeData = _ref19.treeData,
       newNode = _ref19.newNode,
       _ref19$parentKey = _ref19.parentKey,
@@ -1296,8 +1297,102 @@ function addNodeUnderParent(_ref19) {
       ignoreCollapsed = _ref19$ignoreCollapse === void 0 ? true : _ref19$ignoreCollapse,
       _ref19$expandParent = _ref19.expandParent,
       expandParent = _ref19$expandParent === void 0 ? false : _ref19$expandParent,
-      _ref19$addAsFirstChil = _ref19.addAsFirstChild,
-      addAsFirstChild = _ref19$addAsFirstChil === void 0 ? false : _ref19$addAsFirstChil;
+      _ref19$index = _ref19.index,
+      index = _ref19$index === void 0 ? 0 : _ref19$index;
+  var insertedTreeIndex = null;
+  var hasBeenAdded = false;
+  var changedTreeData = map({
+    treeData: treeData,
+    getNodeKey: getNodeKey,
+    ignoreCollapsed: ignoreCollapsed,
+    callback: function callback(_ref20) {
+      var node = _ref20.node,
+          treeIndex = _ref20.treeIndex,
+          path = _ref20.path;
+      var key = path ? path[path.length - 1] : null; // Return nodes that are not the parent as-is
+
+      if (hasBeenAdded || key !== parentKey) {
+        return node;
+      }
+
+      hasBeenAdded = true;
+
+      var parentNode = _objectSpread2({}, node);
+
+      if (expandParent) {
+        parentNode.expanded = true;
+      } // If no children exist yet, just add the single newNode
+
+
+      if (!parentNode.children) {
+        insertedTreeIndex = treeIndex + 1;
+        return _objectSpread2(_objectSpread2({}, parentNode), {}, {
+          children: [newNode]
+        });
+      }
+
+      if (typeof parentNode.children === 'function') {
+        throw new Error('Cannot add to children defined by a function');
+      }
+
+      var nextTreeIndex = treeIndex + 1;
+
+      for (var i = 0; i < parentNode.children.length; i += 1) {
+        nextTreeIndex += 1 + getDescendantCount({
+          node: parentNode.children[i],
+          ignoreCollapsed: ignoreCollapsed
+        });
+      }
+
+      insertedTreeIndex = nextTreeIndex;
+
+      var newChildren = _toConsumableArray(parentNode.children); // const children = [...parentNode.children, newNode];
+
+
+      var children = newChildren.splice(index, 0, newNode);
+      return _objectSpread2(_objectSpread2({}, parentNode), {}, {
+        children: children
+      });
+    }
+  });
+
+  if (!hasBeenAdded) {
+    throw new Error('No node found with the given key.');
+  }
+
+  return {
+    treeData: changedTreeData,
+    treeIndex: insertedTreeIndex
+  };
+}
+/**
+ * Adds the node to the specified parent and returns the resulting treeData.
+ *
+ * @param {!Object[]} treeData
+ * @param {!Object} newNode - The node to insert
+ * @param {number|string} parentKey - The key of the to-be parentNode of the node
+ * @param {!function} getNodeKey - Function to get the key from the nodeData and tree index
+ * @param {boolean=} ignoreCollapsed - Ignore children of nodes without `expanded` set to `true`
+ * @param {boolean=} expandParent - If true, expands the parentNode specified by parentPath
+ * @param {boolean=} addAsFirstChild - If true, adds new node as first child of tree
+ *
+ * @return {Object} result
+ * @return {Object[]} result.treeData - The updated tree data
+ * @return {number} result.treeIndex - The tree index at which the node was inserted
+ */
+
+function addNodeUnderParent(_ref21) {
+  var treeData = _ref21.treeData,
+      newNode = _ref21.newNode,
+      _ref21$parentKey = _ref21.parentKey,
+      parentKey = _ref21$parentKey === void 0 ? null : _ref21$parentKey,
+      getNodeKey = _ref21.getNodeKey,
+      _ref21$ignoreCollapse = _ref21.ignoreCollapsed,
+      ignoreCollapsed = _ref21$ignoreCollapse === void 0 ? true : _ref21$ignoreCollapse,
+      _ref21$expandParent = _ref21.expandParent,
+      expandParent = _ref21$expandParent === void 0 ? false : _ref21$expandParent,
+      _ref21$addAsFirstChil = _ref21.addAsFirstChild,
+      addAsFirstChild = _ref21$addAsFirstChil === void 0 ? false : _ref21$addAsFirstChil;
 
   if (parentKey === null) {
     return addAsFirstChild ? {
@@ -1315,10 +1410,10 @@ function addNodeUnderParent(_ref19) {
     treeData: treeData,
     getNodeKey: getNodeKey,
     ignoreCollapsed: ignoreCollapsed,
-    callback: function callback(_ref20) {
-      var node = _ref20.node,
-          treeIndex = _ref20.treeIndex,
-          path = _ref20.path;
+    callback: function callback(_ref22) {
+      var node = _ref22.node,
+          treeIndex = _ref22.treeIndex,
+          path = _ref22.path;
       var key = path ? path[path.length - 1] : null; // Return nodes that are not the parent as-is
 
       if (hasBeenAdded || key !== parentKey) {
@@ -1372,21 +1467,21 @@ function addNodeUnderParent(_ref19) {
   };
 }
 
-function addNodeAtDepthAndIndex(_ref21) {
-  var targetDepth = _ref21.targetDepth,
-      minimumTreeIndex = _ref21.minimumTreeIndex,
-      newNode = _ref21.newNode,
-      ignoreCollapsed = _ref21.ignoreCollapsed,
-      expandParent = _ref21.expandParent,
-      _ref21$isPseudoRoot = _ref21.isPseudoRoot,
-      isPseudoRoot = _ref21$isPseudoRoot === void 0 ? false : _ref21$isPseudoRoot,
-      isLastChild = _ref21.isLastChild,
-      node = _ref21.node,
-      currentIndex = _ref21.currentIndex,
-      currentDepth = _ref21.currentDepth,
-      getNodeKey = _ref21.getNodeKey,
-      _ref21$path = _ref21.path,
-      path = _ref21$path === void 0 ? [] : _ref21$path;
+function addNodeAtDepthAndIndex(_ref23) {
+  var targetDepth = _ref23.targetDepth,
+      minimumTreeIndex = _ref23.minimumTreeIndex,
+      newNode = _ref23.newNode,
+      ignoreCollapsed = _ref23.ignoreCollapsed,
+      expandParent = _ref23.expandParent,
+      _ref23$isPseudoRoot = _ref23.isPseudoRoot,
+      isPseudoRoot = _ref23$isPseudoRoot === void 0 ? false : _ref23$isPseudoRoot,
+      isLastChild = _ref23.isLastChild,
+      node = _ref23.node,
+      currentIndex = _ref23.currentIndex,
+      currentDepth = _ref23.currentDepth,
+      getNodeKey = _ref23.getNodeKey,
+      _ref23$path = _ref23.path,
+      path = _ref23$path === void 0 ? [] : _ref23$path;
 
   var selfPath = function selfPath(n) {
     return isPseudoRoot ? [] : [].concat(_toConsumableArray(path), [getNodeKey({
@@ -1566,17 +1661,17 @@ function addNodeAtDepthAndIndex(_ref21) {
  */
 
 
-function insertNode(_ref22) {
-  var treeData = _ref22.treeData,
-      targetDepth = _ref22.depth,
-      minimumTreeIndex = _ref22.minimumTreeIndex,
-      newNode = _ref22.newNode,
-      _ref22$getNodeKey = _ref22.getNodeKey,
-      getNodeKey = _ref22$getNodeKey === void 0 ? function () {} : _ref22$getNodeKey,
-      _ref22$ignoreCollapse = _ref22.ignoreCollapsed,
-      ignoreCollapsed = _ref22$ignoreCollapse === void 0 ? true : _ref22$ignoreCollapse,
-      _ref22$expandParent = _ref22.expandParent,
-      expandParent = _ref22$expandParent === void 0 ? false : _ref22$expandParent;
+function insertNode(_ref24) {
+  var treeData = _ref24.treeData,
+      targetDepth = _ref24.depth,
+      minimumTreeIndex = _ref24.minimumTreeIndex,
+      newNode = _ref24.newNode,
+      _ref24$getNodeKey = _ref24.getNodeKey,
+      getNodeKey = _ref24$getNodeKey === void 0 ? function () {} : _ref24$getNodeKey,
+      _ref24$ignoreCollapse = _ref24.ignoreCollapsed,
+      ignoreCollapsed = _ref24$ignoreCollapse === void 0 ? true : _ref24$ignoreCollapse,
+      _ref24$expandParent = _ref24.expandParent,
+      expandParent = _ref24$expandParent === void 0 ? false : _ref24$expandParent;
 
   if (!treeData && targetDepth === 0) {
     return {
@@ -1635,11 +1730,11 @@ function insertNode(_ref22) {
  *  }}[] nodes - The node array
  */
 
-function getFlatDataFromTree(_ref23) {
-  var treeData = _ref23.treeData,
-      getNodeKey = _ref23.getNodeKey,
-      _ref23$ignoreCollapse = _ref23.ignoreCollapsed,
-      ignoreCollapsed = _ref23$ignoreCollapse === void 0 ? true : _ref23$ignoreCollapse;
+function getFlatDataFromTree(_ref25) {
+  var treeData = _ref25.treeData,
+      getNodeKey = _ref25.getNodeKey,
+      _ref25$ignoreCollapse = _ref25.ignoreCollapsed,
+      ignoreCollapsed = _ref25$ignoreCollapse === void 0 ? true : _ref25$ignoreCollapse;
 
   if (!treeData || treeData.length < 1) {
     return [];
@@ -1668,18 +1763,18 @@ function getFlatDataFromTree(_ref23) {
  * @return {Object[]} treeData - The flat data represented as a tree
  */
 
-function getTreeFromFlatData(_ref24) {
-  var flatData = _ref24.flatData,
-      _ref24$getKey = _ref24.getKey,
-      getKey = _ref24$getKey === void 0 ? function (node) {
+function getTreeFromFlatData(_ref26) {
+  var flatData = _ref26.flatData,
+      _ref26$getKey = _ref26.getKey,
+      getKey = _ref26$getKey === void 0 ? function (node) {
     return node.id;
-  } : _ref24$getKey,
-      _ref24$getParentKey = _ref24.getParentKey,
-      getParentKey = _ref24$getParentKey === void 0 ? function (node) {
+  } : _ref26$getKey,
+      _ref26$getParentKey = _ref26.getParentKey,
+      getParentKey = _ref26$getParentKey === void 0 ? function (node) {
     return node.parentId;
-  } : _ref24$getParentKey,
-      _ref24$rootKey = _ref24.rootKey,
-      rootKey = _ref24$rootKey === void 0 ? '0' : _ref24$rootKey;
+  } : _ref26$getParentKey,
+      _ref26$rootKey = _ref26.rootKey,
+      rootKey = _ref26$rootKey === void 0 ? '0' : _ref26$rootKey;
 
   if (!flatData) {
     return [];
@@ -1774,25 +1869,25 @@ function getDepth(node) {
  *                               it will be the same as the original tree data.
  */
 
-function find(_ref25) {
-  var getNodeKey = _ref25.getNodeKey,
-      treeData = _ref25.treeData,
-      searchQuery = _ref25.searchQuery,
-      searchMethod = _ref25.searchMethod,
-      searchFocusOffset = _ref25.searchFocusOffset,
-      _ref25$expandAllMatch = _ref25.expandAllMatchPaths,
-      expandAllMatchPaths = _ref25$expandAllMatch === void 0 ? false : _ref25$expandAllMatch,
-      _ref25$expandFocusMat = _ref25.expandFocusMatchPaths,
-      expandFocusMatchPaths = _ref25$expandFocusMat === void 0 ? true : _ref25$expandFocusMat;
+function find(_ref27) {
+  var getNodeKey = _ref27.getNodeKey,
+      treeData = _ref27.treeData,
+      searchQuery = _ref27.searchQuery,
+      searchMethod = _ref27.searchMethod,
+      searchFocusOffset = _ref27.searchFocusOffset,
+      _ref27$expandAllMatch = _ref27.expandAllMatchPaths,
+      expandAllMatchPaths = _ref27$expandAllMatch === void 0 ? false : _ref27$expandAllMatch,
+      _ref27$expandFocusMat = _ref27.expandFocusMatchPaths,
+      expandFocusMatchPaths = _ref27$expandFocusMat === void 0 ? true : _ref27$expandFocusMat;
   var matchCount = 0;
 
-  var trav = function trav(_ref26) {
-    var _ref26$isPseudoRoot = _ref26.isPseudoRoot,
-        isPseudoRoot = _ref26$isPseudoRoot === void 0 ? false : _ref26$isPseudoRoot,
-        node = _ref26.node,
-        currentIndex = _ref26.currentIndex,
-        _ref26$path = _ref26.path,
-        path = _ref26$path === void 0 ? [] : _ref26$path;
+  var trav = function trav(_ref28) {
+    var _ref28$isPseudoRoot = _ref28.isPseudoRoot,
+        isPseudoRoot = _ref28$isPseudoRoot === void 0 ? false : _ref28$isPseudoRoot,
+        node = _ref28.node,
+        currentIndex = _ref28.currentIndex,
+        _ref28$path = _ref28.path,
+        path = _ref28$path === void 0 ? [] : _ref28$path;
     var matches = [];
     var isSelfMatch = false;
     var hasFocusMatch = false; // The pseudo-root is not considered in the path
@@ -3401,6 +3496,7 @@ var SortableTree = function SortableTree(props) {
 }; // Export the tree component without the react-dnd DragDropContext,
 
 exports.SortableTreeWithoutDndContext = SortableTreeWithoutDndContext;
+exports.addNodeUnderIndexParent = addNodeUnderIndexParent;
 exports.addNodeUnderParent = addNodeUnderParent;
 exports.changeNodeAtPath = changeNodeAtPath;
 exports.default = SortableTree;

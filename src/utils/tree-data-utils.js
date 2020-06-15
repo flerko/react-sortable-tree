@@ -606,6 +606,98 @@ export function getNodeAtPath({
  * @param {boolean=} ignoreCollapsed - Ignore children of nodes without `expanded` set to `true`
  * @param {boolean=} expandParent - If true, expands the parentNode specified by parentPath
  * @param {boolean=} addAsFirstChild - If true, adds new node as first child of tree
+ * @param {number=} index - Index, after add node
+ *
+ * @return {Object} result
+ * @return {Object[]} result.treeData - The updated tree data
+ * @return {number} result.treeIndex - The tree index at which the node was inserted
+ */
+export function addNodeUnderIndexParent({
+  treeData,
+  newNode,
+  parentKey = null,
+  getNodeKey,
+  ignoreCollapsed = true,
+  expandParent = false,
+  index = 0,
+}) {
+  let insertedTreeIndex = null;
+  let hasBeenAdded = false;
+  const changedTreeData = map({
+    treeData,
+    getNodeKey,
+    ignoreCollapsed,
+    callback: ({ node, treeIndex, path }) => {
+      const key = path ? path[path.length - 1] : null;
+      // Return nodes that are not the parent as-is
+      if (hasBeenAdded || key !== parentKey) {
+        return node;
+      }
+      hasBeenAdded = true;
+
+      const parentNode = {
+        ...node,
+      };
+
+      if (expandParent) {
+        parentNode.expanded = true;
+      }
+
+      // If no children exist yet, just add the single newNode
+      if (!parentNode.children) {
+        insertedTreeIndex = treeIndex + 1;
+        return {
+          ...parentNode,
+          children: [newNode],
+        };
+      }
+
+      if (typeof parentNode.children === 'function') {
+        throw new Error('Cannot add to children defined by a function');
+      }
+
+      let nextTreeIndex = treeIndex + 1;
+      for (let i = 0; i < parentNode.children.length; i += 1) {
+        nextTreeIndex +=
+          1 +
+          getDescendantCount({ node: parentNode.children[i], ignoreCollapsed });
+      }
+
+      insertedTreeIndex = nextTreeIndex;
+
+      const newChildren = [...parentNode.children];
+
+      // const children = [...parentNode.children, newNode];
+      const children = newChildren.splice(index, 0, newNode);
+
+
+      return {
+        ...parentNode,
+        children,
+      };
+    },
+  });
+
+  if (!hasBeenAdded) {
+    throw new Error('No node found with the given key.');
+  }
+
+  return {
+    treeData: changedTreeData,
+    treeIndex: insertedTreeIndex,
+  };
+}
+
+/**
+ * Adds the node to the specified parent and returns the resulting treeData.
+ *
+ * @param {!Object[]} treeData
+ * @param {!Object} newNode - The node to insert
+ * @param {number|string} parentKey - The key of the to-be parentNode of the node
+ * @param {!function} getNodeKey - Function to get the key from the nodeData and tree index
+ * @param {boolean=} ignoreCollapsed - Ignore children of nodes without `expanded` set to `true`
+ * @param {boolean=} expandParent - If true, expands the parentNode specified by parentPath
+ * @param {boolean=} addAsFirstChild - If true, adds new node as first child of tree
  *
  * @return {Object} result
  * @return {Object[]} result.treeData - The updated tree data
