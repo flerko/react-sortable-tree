@@ -1299,6 +1299,16 @@ function addNodeUnderIndexParent(_ref19) {
       expandParent = _ref19$expandParent === void 0 ? false : _ref19$expandParent,
       _ref19$index = _ref19.index,
       index = _ref19$index === void 0 ? 0 : _ref19$index;
+
+  if (parentKey === null) {
+    var data = _toConsumableArray(treeData || []);
+
+    return {
+      treeData: data.splice(index, 0, newNode),
+      treeIndex: (treeData || []).length
+    };
+  }
+
   var insertedTreeIndex = null;
   var hasBeenAdded = false;
   var changedTreeData = map({

@@ -621,6 +621,15 @@ export function addNodeUnderIndexParent({
   expandParent = false,
   index = 0,
 }) {
+  if (parentKey === null) {
+    const data = [...(treeData || [])];
+
+    return {
+      treeData: data.splice(index, 0, newNode),
+      treeIndex: (treeData || []).length,
+    }
+  }
+
   let insertedTreeIndex = null;
   let hasBeenAdded = false;
   const changedTreeData = map({
@@ -669,7 +678,6 @@ export function addNodeUnderIndexParent({
 
       // const children = [...parentNode.children, newNode];
       const children = newChildren.splice(index, 0, newNode);
-
 
       return {
         ...parentNode,
